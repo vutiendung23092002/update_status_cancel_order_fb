@@ -1,0 +1,66 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Nodejs check re order fb sale le
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # chạy 08:00 VN (1:00 UTC)
+    - cron: "0 6 * * *"   # chạy 13:00 VN (6:00 UTC)
+    - cron: "30 9 * * *"  # chạy 16:30 VN (9:30 UTC)
+  workflow_dispatch:
+    inputs:
+      LARK_TABLE_CHECK_CANCEL:
+        description: "Tên bảng cần kiểm tra"
+        required: true
+        type: string
+
+      LARK_TABLE_NO_CANCEL:
+        description: "Tên bảng không chứa stt cancel (k có thì điền bừa)"
+        required: true
+        type: string
+
+      LARK_TABLE_NEXT_MONTH_NO_CANCEL:
+        description: "Tên bảng tháng kế tiếp (không có thì điền bừa)"
+        required: true
+        type: string
+        
+      FROM:
+        description: "Từ ngày (YYYY/MM/DD)"
+        required: true
+        type: string
+
+      TO:
+        description: "Đến ngày (YYYY/MM/DD)"
+        required: true
+        type: string
+
+jobs:
+  sync-finance-job:
+    runs-on: ubuntu-latest
+    environment: update_status_cancel_order_fb
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci --only=production
+
+      - name: Run check-re-order-fb.js
+        env:
+          LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          LARK_BASE_ID: ${{ vars.LARK_BASE_ID }}
+          LARK_TABLE_CHECK_CANCEL: ${{ inputs.LARK_TABLE_CHECK_CANCEL != '' && inputs.LARK_TABLE_CHECK_CANCEL || vars.LARK_TABLE_CHECK_CANCEL }}
+          LARK_TABLE_NO_CANCEL: ${{ inputs.LARK_TABLE_NO_CANCEL != '' && inputs.LARK_TABLE_NO_CANCEL || vars.LARK_TABLE_NO_CANCEL }}
+          LARK_TABLE_NEXT_MONTH_NO_CANCEL: ${{ inputs.LARK_TABLE_NEXT_MONTH_NO_CANCEL != '' && inputs.LARK_TABLE_NEXT_MONTH_NO_CANCEL || vars.LARK_TABLE_NEXT_MONTH_NO_CANCEL }}
+          FROM: ${{ inputs.FROM != '' && inputs.FROM || vars.FROM }}
+          TO: ${{ inputs.TO != '' && inputs.TO || vars.TO }}
+
+        run: node check-re-order-fb.js
