@@ -4,7 +4,7 @@ import { createLarkClient } from "./src/core/larkbase-client.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-const ONE_MI = 60 * 1000;
+const TWO_DAY = 2 * 24 * 60 * 60 * 1000;
 const SEVEN_DAY = 7 * 24 * 60 * 60 * 1000;
 
 function toDate(ts) {
@@ -35,8 +35,8 @@ export async function checkReOrderFB(
     process.env.LARK_APP_SECRET
   );
 
-  const timestampFrom = utils.vnTimeToUTCTimestampMiliseconds(from) - ONE_MI;
-  const timestampTo = utils.vnTimeToUTCTimestampMiliseconds(to) + ONE_MI;
+  const timestampFrom = utils.vnTimeToUTCTimestampMiliseconds(from) - TWO_DAY;
+  const timestampTo = utils.vnTimeToUTCTimestampMiliseconds(to) + TWO_DAY;
 
   const listTb = await larkService.getListTable(larkClient, baseId);
 
@@ -44,13 +44,13 @@ export async function checkReOrderFB(
   const mainTbCheck = listTb?.data?.items?.find((t) => t.name === tableName);
   if (!mainTbCheck) throw new Error(`Không tìm thấy bảng: ${tableName}`);
   const tableId1 = mainTbCheck.table_id;
-  console.log(`[LARK] ✅ Tìm thấy bảng '${tableName}' (ID=${tableId1})`);
+  console.log(`[LARK] Tìm thấy bảng '${tableName}' (ID=${tableId1})`);
 
   const existingRecords = await larkService.searchLarkRecordsFilterDate(
     larkClient,
     baseId,
     tableId1,
-    1000,
+    500,
     "Ngày tạo đơn",
     timestampFrom,
     timestampTo
@@ -66,7 +66,7 @@ export async function checkReOrderFB(
 
   if (table2) {
     tableId2 = table2.table_id;
-    console.log(`[LARK] ✅ Tìm thấy bảng '${tableName2}' (ID=${tableId2})`);
+    console.log(`[LARK] Tìm thấy bảng '${tableName2}' (ID=${tableId2})`);
     noCancelRecord2 = await larkService.searchLarkRecords(
       larkClient,
       baseId,
@@ -78,7 +78,7 @@ export async function checkReOrderFB(
     );
   } else {
     console.warn(
-      `[LARK] ⚠️ Không tìm thấy bảng '${tableName2}', sẽ chỉ xử lý dữ liệu từ '${tableName}'.`
+      `[LARK]  Không tìm thấy bảng '${tableName2}', sẽ chỉ xử lý dữ liệu từ '${tableName}'.`
     );
   }
 
@@ -89,7 +89,7 @@ export async function checkReOrderFB(
 
   if (table3) {
     tableId3 = table3.table_id;
-    console.log(`[LARK] ✅ Tìm thấy bảng '${tableName3}' (ID=${tableId3})`);
+    console.log(`[LARK] Tìm thấy bảng '${tableName3}' (ID=${tableId3})`);
     noCancelRecord3 = await larkService.searchLarkRecordsFilterDate(
       larkClient,
       baseId,
@@ -104,7 +104,7 @@ export async function checkReOrderFB(
     );
   } else {
     console.warn(
-      `[LARK] ⚠️ Không tìm thấy bảng '${tableName3}', sẽ chỉ xử lý dữ liệu từ '${tableName}'.`
+      `[LARK]  Không tìm thấy bảng '${tableName3}', sẽ chỉ xử lý dữ liệu từ '${tableName}'.`
     );
   }
 
@@ -249,7 +249,7 @@ export async function checkReOrderFB(
       batchCancelledFinal
     );
 
-  console.log(`[LARK] ✅ Hoàn tất cập nhật trạng thái huỷ.`);
+  console.log(`[LARK] Hoàn tất cập nhật trạng thái huỷ.`);
 }
 
 const baseId = process.env.LARK_BASE_ID;
